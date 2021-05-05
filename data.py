@@ -4,6 +4,8 @@ import numpy as np
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 
+import pdb
+
 
 def translated_gaussian(num_sample=1000, num_mechanism=4, scale=0.05, dist=1.0):
     mean = [0, 0]
@@ -57,7 +59,7 @@ def single_translated_gaussian_dataset(batch_size, args, scale=1.0, num_sample=1
     return dataloader
 
 
-def transformed_mnist_dataset(batch_size, args):
+def transformed_mnist_dataset(batch_size, args, test=False):
     num_transform = args.num_transform
 
     original_data_name = "mnist_original_data"
@@ -65,21 +67,26 @@ def transformed_mnist_dataset(batch_size, args):
     if num_transform > 1:
         original_data_name += "_{}_transform".format(num_transform)
         transformed_data_name += "_{}_transform".format(num_transform)
- 
-    source_data = np.load("./" + original_data_name + '.npy', allow_pickle=True)
-    target_data = np.load("./" + transformed_data_name + '.npy', allow_pickle=True)
+    if test:
+        source_data = np.load("data/" + original_data_name + '_test.npy', allow_pickle=True)
+        target_data = np.load("data/" + transformed_data_name + '_test.npy', allow_pickle=True)
+    else:
+        source_data = np.load("data/" + original_data_name + '.npy', allow_pickle=True)
+        target_data = np.load("data/" + transformed_data_name + '.npy', allow_pickle=True)
+
+    # pdb.set_trace()
 
     source_data = np.transpose(source_data, [0, 3, 1, 2])
     target_data = np.transpose(target_data, [0, 3, 1, 2])
 
-    np.random.shuffle(source_data)
-    np.random.shuffle(target_data)
+    # np.random.shuffle(source_data)
+    # np.random.shuffle(target_data)
 
-    target_size = target_data.shape[0]
-    source_size = source_data.shape[0]
-    multiple = target_size // (source_size * 2)
-    source_data = np.concatenate([source_data] * multiple, axis=0)
-    target_data = target_data[: source_size * multiple]
+    # target_size = target_data.shape[0]
+    # source_size = source_data.shape[0]
+    # multiple = target_size // (source_size * 2)
+    # source_data = np.concatenate([source_data] * multiple, axis=0)
+    # target_data = target_data[: source_size * multiple]
 
     tensor_src = torch.Tensor(source_data)
     tensor_tgt = torch.Tensor(target_data)
