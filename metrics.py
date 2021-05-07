@@ -127,24 +127,24 @@ def get_ssim(experts, discriminator, data, args):
                     # samples = exp_out[selected_idx, i]
                     samples = e(x_tgt[selected_idx])
                     for sample, s_idx in zip(samples, selected_idx):
-                        sample_np = sample[0].cpu().numpy()
-                        src_np = x_src[s_idx,0].cpu().numpy()
-                        # f, axarr = plt.subplots(nrows=1,ncols=3)
-                        # axarr[0].axis('off')
-                        # plt.sca(axarr[0]); 
-                        # plt.imshow(x_tgt[s_idx, 0].cpu().numpy()); plt.title('Transformed')
-                        # plt.sca(axarr[1]); 
-                        # axarr[1].axis('off')
-                        # plt.imshow(sample_np); plt.title('Expert')
-                        # plt.sca(axarr[2]); 
-                        # axarr[2].axis('off')
-                        # plt.imshow(src_np); plt.title('Original')
-                        # plt.show()
-                        # ssim_losses.append(ssim(sample_np, src_np, data_range=1.0))
-                        # plt.imshow(src_np)
-                        # plt.savefig('image1.png')
-                        # plt.clf()
-                        # pdb.set_trace()
-                        ssim_losses.append(ssim(sample_np, src_np, data_range=1.0))
+                        sample_np = np.moveaxis(sample.cpu().numpy(), 0, -1)
+                        src_np = np.moveaxis(x_src[s_idx].cpu().numpy(), 0, -1)
+                        f, axarr = plt.subplots(nrows=1,ncols=3)
+                        axarr[0].axis('off')
+                        plt.sca(axarr[0]); 
+                        plt.imshow(np.moveaxis(x_tgt[s_idx].cpu().numpy(), 0, -1)); plt.title('Transformed')
+                        plt.sca(axarr[1]); 
+                        axarr[1].axis('off')
+                        plt.imshow(sample_np); plt.title('Expert')
+                        plt.sca(axarr[2]); 
+                        axarr[2].axis('off')
+                        plt.imshow(src_np); plt.title('Original')
+                        plt.show()
+                        ssim_losses.append(ssim(sample_np, src_np, data_range=1.0, multichannel=True))
+                        plt.imshow(src_np)
+                        plt.savefig('image1.png')
+                        plt.clf()
+                        pdb.set_trace()
+                        ssim_losses.append(ssim(sample_np, src_np, data_range=1.0, multichannel=True))
     return np.mean(ssim_losses)
     

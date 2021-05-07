@@ -6,7 +6,9 @@ import torchvision
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import ndimage
+from PIL import Image
 
+import transforms
 import pdb
 
 def generated_transformed_mnist(
@@ -40,6 +42,7 @@ def generated_transformed_mnist(
         for _ in range(num_copy_per_image):
             ts = np.random.choice(candidates, num_transform, replace=False)
             img_t = img.copy()
+            pdb.set_trace()
             for t in ts:
                 img_t = t(img_t)
             target_dataset.append(img_t)
@@ -48,6 +51,67 @@ def generated_transformed_mnist(
 
     original_data_name = "mnist_original_data"
     transformed_data_name = "mnist_transformed_data"
+    if num_transform > 1:
+        original_data_name += "_{}_transform".format(num_transform)
+        transformed_data_name += "_{}_transform".format(num_transform)
+    if (test_data):
+        original_data_name += "_test"
+        transformed_data_name += "_test"
+    np.save(os.path.join(save_path, original_data_name), dataset)
+    np.save(os.path.join(save_path, transformed_data_name), target_dataset)
+    np.save(os.path.join(save_path, original_data_name + "_label"), label)
+    np.save(os.path.join(save_path, transformed_data_name + "_label"), target_label)
+
+def generated_transformed_cifar10(
+    save_path, num_transform=1, num_copy_per_image=1, add_rotation=False, test_data = False
+):
+    train_loader = torch.utils.data.DataLoader(
+        torchvision.datasets.CIFAR10(
+            root="./",
+            train=True,
+            download=True,
+            transform=torchvision.transforms.Compose(
+                [torchvision.transforms.ToTensor()]
+            ),
+        ),
+        batch_size=64,
+        shuffle=True,
+    )
+    data, label = [], []
+    for x, y in train_loader:
+        data.append(np.transpose(x.numpy(), (0, 2, 3, 1)))
+        label.append(y.numpy())
+    dataset = np.concatenate(data, axis=0)
+    label = np.concatenate(label, axis=0)
+
+    # Transforming data
+    candidates = [ 
+        transforms.insta_filter('contrast', 1),
+        transforms.insta_filter('hue_rotate', 90),
+        transforms.insta_filter('hue_rotate', 180),
+        transforms.insta_filter('saturate', 1),
+        transforms.insta_filter('sepia', 1),
+    ]
+    # candidates = [shift_right, shift_down, blur, noise, invert]
+    # if add_rotation:
+    #     candidates.append(rotate)
+    target_dataset, target_label = [], []
+    for img, y in zip(dataset, label):
+        for _ in range(num_copy_per_image):
+            ts = np.random.choice(candidates, num_transform, replace=False)
+            img_t = img.copy()
+            Image.fromarray((img_t * 255).astype(np.uint8)).save('test.png')
+            # pdb.set_trace()
+            for t in ts:
+                img_t = t(img_t)
+                Image.fromarray((img_t * 255).astype(np.uint8)).save('test.png')
+            # pdb.set_trace()
+            target_dataset.append(img_t)
+            target_label.append(y)
+    target_dataset, target_label = np.array(target_dataset), np.array(target_label)
+
+    original_data_name = "cifar10_original_data"
+    transformed_data_name = "cifar10_transformed_data"
     if num_transform > 1:
         original_data_name += "_{}_transform".format(num_transform)
         transformed_data_name += "_{}_transform".format(num_transform)
@@ -214,5 +278,5 @@ def visualize_transforms():
     
 if __name__ == "__main__":
     # visualize_transforms()
-    generated_transformed_mnist('data', num_transform=1, add_rotation=True, test_data=False)
+    generated_transformed_cifar10('data', num_transform=1, add_rotation=True, test_data=False)
             

@@ -72,3 +72,28 @@ class ConvolutionExpert(Expert):
             nn.Sigmoid(),
         ]
         return nn.Sequential(*layers)
+
+class CifarConvolutionExpert(Expert):
+    """Expert for images."""
+
+    def build(self):
+        conv_layer = SNConv2d if self.config.use_sn else nn.Conv2d
+        layers = [
+            nn.Conv2d(3, 12, 4, stride=2, padding=1),            # [batch, 12, 16, 16]
+            nn.ReLU(),
+            nn.Conv2d(12, 24, 4, stride=2, padding=1),           # [batch, 24, 8, 8]
+            nn.ReLU(),
+			nn.Conv2d(24, 48, 4, stride=2, padding=1),           # [batch, 48, 4, 4]
+            nn.ReLU(),
+            nn.Conv2d(48, 96, 4, stride=2, padding=1),           # [batch, 96, 2, 2]
+            nn.ReLU(),
+            nn.ConvTranspose2d(96, 48, 4, stride=2, padding=1),  # [batch, 48, 4, 4]
+            nn.ReLU(),
+            nn.ConvTranspose2d(48, 24, 4, stride=2, padding=1),  # [batch, 24, 8, 8]
+            nn.ReLU(),
+			nn.ConvTranspose2d(24, 12, 4, stride=2, padding=1),  # [batch, 12, 16, 16]
+            nn.ReLU(),
+            nn.ConvTranspose2d(12, 3, 4, stride=2, padding=1),   # [batch, 3, 32, 32]
+            nn.Sigmoid()
+        ]
+        return nn.Sequential(*layers)

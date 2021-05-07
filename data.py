@@ -102,3 +102,47 @@ def transformed_mnist_dataset(batch_size, args, test=False):
         drop_last=True,
     )
     return dataloader
+
+def transformed_cifar10_dataset(batch_size, args, test=False):
+    num_transform = args.num_transform
+
+    original_data_name = "cifar10_original_data"
+    transformed_data_name = "cifar10_transformed_data"
+    if num_transform > 1:
+        original_data_name += "_{}_transform".format(num_transform)
+        transformed_data_name += "_{}_transform".format(num_transform)
+    if test:
+        source_data = np.load("data/" + original_data_name + '_test.npy', allow_pickle=True)
+        target_data = np.load("data/" + transformed_data_name + '_test.npy', allow_pickle=True)
+    else:
+        source_data = np.load("data/" + original_data_name + '.npy', allow_pickle=True)
+        target_data = np.load("data/" + transformed_data_name + '.npy', allow_pickle=True)
+
+    # pdb.set_trace()
+
+    source_data = np.transpose(source_data, [0, 3, 1, 2])
+    target_data = np.transpose(target_data, [0, 3, 1, 2])
+
+    # np.random.shuffle(source_data)
+    # np.random.shuffle(target_data)
+
+    # target_size = target_data.shape[0]
+    # source_size = source_data.shape[0]
+    # multiple = target_size // (source_size * 2)
+    # source_data = np.concatenate([source_data] * multiple, axis=0)
+    # target_data = target_data[: source_size * multiple]
+
+    tensor_src = torch.Tensor(source_data)
+    tensor_tgt = torch.Tensor(target_data)
+    print(tensor_src.size(), tensor_tgt.size())
+
+    dataset = TensorDataset(tensor_src, tensor_tgt)
+    dataloader = DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=int(args.cuda),
+        pin_memory=args.cuda,
+        drop_last=True,
+    )
+    return dataloader

@@ -7,7 +7,7 @@ import numpy as np
 
 import expert as exper
 import discriminator as discrim
-from data import translated_gaussian_dataset, transformed_mnist_dataset
+from data import translated_gaussian_dataset, transformed_mnist_dataset, transformed_cifar10_dataset
 import metrics
 from train_utils import initialize_experts
 from train_utils import train_icm
@@ -62,34 +62,34 @@ if __name__ == "__main__":
     args.cuda = torch.cuda.is_available()
 
     args.batch_size = 256
-    args.num_initialize_epoch = 20
-    args.min_initialization_loss = 0.1
-    args.num_epoch = 0
+    args.num_initialize_epoch = 1
+    args.min_initialization_loss = 0.01
+    args.num_epoch = 10
     args.discriminator_output_size = 1
     # args.input_shape = 2
-    args.input_shape = [28, 28, 1]
+    args.input_shape = [32, 32, 3]
     args.use_sn = True
     args.num_experts = 5
     args.discriminator_sigmoid = False
     args.noise_scale = 0.1
-    args.print_iterval = 200
+    args.print_iterval = 100
     args.no_source_target = False
     args.num_transform = 1
     args.width_multiplier = 1
     args.load_experts_init = True
-    args.load_experts = True
+    args.load_experts = False
 
-    args.experts_init_file = 'saved_models/expert_init_transforms_1.pt'
-    args.experts_file = 'saved_models/base_icm_transforms_1.pt'
+    args.experts_init_file = 'saved_models/cifar_expert_init_transforms_1.pt'
+    args.experts_file = 'saved_models/cifar_base_icm_transforms_1.pt'
     args.device = torch.device("cuda" if args.cuda else "cpu")
 
     # Data
-    data = transformed_mnist_dataset(args.batch_size, args, test=True)
+    data = transformed_cifar10_dataset(args.batch_size, args, test=False)
     # data = translated_gaussian_dataset(args.batch_size, args)
 
     # Model
-    experts = [exper.ConvolutionExpert(args).to(args.device) for i in range(args.num_experts)]
-    discriminator = discrim.ConvolutionDiscriminator(args).to(args.device)
+    experts = [exper.CifarConvolutionExpert(args).to(args.device) for i in range(args.num_experts)]
+    discriminator = discrim.CifarConvolutionDiscriminator().to(args.device)
 
     if (args.load_experts_init):
         init_experts = torch.load(args.experts_init_file, map_location=args.device)['expert_state_dicts']
@@ -117,12 +117,12 @@ if __name__ == "__main__":
 
     for n in tqdm(range(args.num_epoch)):
         train_icm(experts, expert_opt, discriminator, discriminator_opt, data, args)
-        torch.save( {
-            'expert_optimizer_state_dicts': [e.state_dict() for e in expert_opt],
-            'expert_state_dicts': [e.state_dict() for e in experts],
-            'discriminator_optimizer_state_dict': [discriminator_opt.state_dict()],
-            'discriminator_state_dict': discriminator.state_dict()
-        }, args.experts_file)
+        # torch.save( {
+        #     'expert_optimizer_state_dicts': [e.state_dict() for e in expert_opt],
+        #     'expert_state_dicts': [e.state_dict() for e in experts],
+        #     'discriminator_optimizer_state_dict': [discriminator_opt.state_dict()],
+        #     'discriminator_state_dict': discriminator.state_dict()
+        # }, args.experts_file)
     print('SSIM', metrics.get_ssim(experts, discriminator, data, args))
     
     
