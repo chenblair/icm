@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-def find_inverse(experts, data, metric_func, right_inverse=True):
+def find_inverse(experts, data, metric_func=torch.nn.MSELoss(), right_inverse=True):
     n_experts = len(experts)
     scores = np.zeros((n_experts, n_experts))
 
