@@ -7,7 +7,8 @@ import numpy as np
 
 import expert as exper
 import discriminator as discrim
-from data import translated_gaussian_dataset, transformed_mnist_dataset
+from data import translated_gaussian_dataset, transformed_mnist_dataset, transformed_color_mnist_dataset
+import inverse
 import metrics
 from train_utils import initialize_experts
 from train_utils import train_icm
@@ -61,13 +62,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args.cuda = torch.cuda.is_available()
 
-    args.batch_size = 256
+    args.batch_size = 64
     args.num_initialize_epoch = 20
     args.min_initialization_loss = 0.1
     args.num_epoch = 0
     args.discriminator_output_size = 1
     # args.input_shape = 2
-    args.input_shape = [28, 28, 1]
+    args.input_shape = [28, 28, 3]
     args.use_sn = True
     args.num_experts = 5
     args.discriminator_sigmoid = False
@@ -84,7 +85,7 @@ if __name__ == "__main__":
     args.device = torch.device("cuda" if args.cuda else "cpu")
 
     # Data
-    data = transformed_mnist_dataset(args.batch_size, args, test=True)
+    data = transformed_color_mnist_dataset(args.batch_size, args, test=False)
     # data = translated_gaussian_dataset(args.batch_size, args)
 
     # Model
@@ -100,6 +101,7 @@ if __name__ == "__main__":
         torch.save( {
             'expert_state_dicts': [e.state_dict() for e in experts]
         }, args.experts_init_file)
+    print(inverse.find_inverse(experts, data, args, right_inverse=False))
 
     discriminator_opt = torch.optim.Adam(discriminator.parameters())
     expert_opt = []

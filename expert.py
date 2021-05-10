@@ -68,7 +68,7 @@ class ConvolutionExpert(Expert):
             nn.ReLU(),
             conv_layer(32, 16, 3, 1, padding=1),
             nn.ReLU(),
-            nn.Conv2d(16, 1, 1, 1, padding=0),
+            nn.Conv2d(16, 3, 1, 1, padding=0),
             nn.Sigmoid(),
         ]
         return nn.Sequential(*layers)
